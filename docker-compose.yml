@@ -1,0 +1,13 @@
+version: '3'
+services:
+  mv4atuomation:
+    image: registry.git-ce.rwth-aachen.de/wzl-mq-ms/forschung-lehre/kombizelle/spp-team-data/frontend/js-frontend:latest
+    container_name: am-database
+    ports:
+      - '8504:80'
+    dns:
+      - 134.130.4.1
+      - 134.130.5.1
+      - 8.8.8.8
+      - 1.1.1.1
+    restart: unless-stopped
