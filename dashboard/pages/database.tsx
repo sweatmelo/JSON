@@ -1,7 +1,7 @@
 import { Fragment } from 'react'
-import Head from 'next/head'
+// import Head from 'next/head'
 import CollectionComp from '@/components/collection'
-import { WEBSITE } from '@/constants/config'
+// import { WEBSITE } from '@/constants/config'
 
 const DatabasePage = () => {
   return (

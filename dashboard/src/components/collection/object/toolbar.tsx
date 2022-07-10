@@ -69,7 +69,7 @@ const ObjectTool = () => {
       return;
     }
     if (!filename)
-      filename = 'json.json'
+      filename = `${objectAttributes.data.name}.json`
     // let data;
     if (typeof data === 'object') {
       console.log(objectAttributes.data);
@@ -121,6 +121,7 @@ const ObjectTool = () => {
     //   setAddLinkDialogState(true)
     // }
   }
+
 
   const handleSelect = (e) => {
     setCurrentType(e.target.value)
@@ -228,7 +229,7 @@ const ObjectTool = () => {
             variant="contained"
             sx={{ marginRight: 2 }}
             startIcon={<Update />}
-            onClick={update}
+            onClick={() => update()}
           >
             Update
           </Button>
