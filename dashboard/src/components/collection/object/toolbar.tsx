@@ -47,7 +47,7 @@ const ObjectTool = () => {
     setOptions([{ label: 'create new Link', value: { value: 'create new Link', key: 'create new Link' } }])
     Object.keys(objectAttributes.data).forEach(e => {
       console.log(objectAttributes.data[e]);
-      if (typeof objectAttributes.data[e] === 'object' &&
+      if (objectAttributes.data[e] && typeof objectAttributes.data[e] === 'object' &&
         (Object.keys(objectAttributes.data[e]).includes('referenced_collection') || Object.keys(objectAttributes.data[e]).includes('referenced_collections'))) {
         // debugger
         tag++
