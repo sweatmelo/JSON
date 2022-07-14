@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Fragment, MouseEventHandler, useEffect, useId, useState } from 'react'
 import List from '@mui/material/List'
 import Box from '@mui/material/Box'
@@ -10,7 +11,7 @@ import { ArrowRightOutlined, Add } from '@mui/icons-material'
 
 import Drawer from '@/components/drawer'
 import theme from '@/libs/theme'
-import { getCollectionTree, IDocument, getSubObject } from '@/libs/service'
+import { getCollectionTree, IDocument, getSubObject, getLinkList } from '@/libs/service'
 import { useCollectionContext } from '@/providers/collection'
 import { useObjectContext, ObjectModes, TObject } from '@/providers/object'
 import useAllCollections from '@/hooks/useAllCollections'
@@ -176,6 +177,8 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   const handleFetchSubObject = async () => {
     try {
       const { documents } = await getSubObject(objectId)
+      // const { documents } = await getLinkList(objectId)
+
       setDataState(documents)
     } catch (e) {
       console.warn(e)
@@ -207,9 +210,9 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   )
 }
 
-const CollectionList: React.FC = () => {
-  const { data: collectionList, loading: collectionLoading } = useAllCollections()
-
+const CollectionList: React.FC = (freshTag) => {
+  const { data: collectionList, loading: collectionLoading } = useAllCollections(freshTag)
+  //第一层的collection
   return (
     <CustomerDrawer variant="permanent" open>
       <List component="nav">

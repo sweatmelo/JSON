@@ -106,10 +106,10 @@ const ObjectProvider: React.FC<ObjectProviderProps> = ({ children }) => {
 
   const handleUpdate = async (data = null) => {
     console.log('update', objectAttributesCacheRef.current)
-    debugger
-    if (!objectState.id) {
-      return
-    }
+    // debugger
+    // if (!objectState.id) {
+    // return
+    // }
     try {
       if (!data)
         await updateObjectAttributes(objectState.id, objectAttributesCacheRef.current)

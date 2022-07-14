@@ -21,8 +21,8 @@ import CollectionList from './link-list'
 import useObjectSubObject from '@/hooks/useObjectSubObject'
 import Spin from '@/components/spin'
 // import { useRouter } from 'next/router'
-import { uploadFile } from '@/libs/service'
-const ObjectTool = () => {
+import { uploadFile, downloadFile, addObject, addLinkAfteruploadfile } from '@/libs/service'
+const ObjectTool = ({ setFreshTag }) => {
   const [addLinkDialogState, setAddLinkDialogState] = useState<boolean>(false)
   const [deleteLinkDialogState, setDeleteLinkDialogState] = useState<boolean>(false)
   const [removeBtnTargetState, setRemoveBtnTargetState] = useState<HTMLButtonElement | null>(null)
@@ -63,6 +63,21 @@ const ObjectTool = () => {
     return tag > 1
   }, [objectAttributes])
 
+  //下载文件
+  const downLoadFile = async () => {
+    const res = downloadFile(objectV.id)
+    console.log(res)
+    // const elink = document.createElement('a')
+
+    // elink.href = url
+    // elink.setAttribute('download', fileName)
+    // elink.style.display = 'none'
+    // document.body.appendChild(elink)
+    // setTimeout(() => {
+    // elink.click()
+    // document.body.removeChild(elink)
+    // }, 66)
+  }
   const exportDoc = (data = objectAttributes.data, filename) => {
     if (!objectAttributes.data) {
       alert('no data');
@@ -84,31 +99,45 @@ const ObjectTool = () => {
     e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
     a.dispatchEvent(e)
   }
-  const handleAddLink = (e) => {
+  const handleAddLink = async (e) => {
     const resultFile = document.getElementById('upload_file').files[0]
-    if (uploadFileType === 'json') {
-      if (!resultFile.name.includes(uploadFileType === 'file' ? '' : 'json')) {
-        alert('file type wrong')
-        return
-      }
+    console.log(resultFile)
+    if (!resultFile.name.includes(uploadFileType === 'file' ? '' : 'json')) {
+      alert('file type wrong')
+      return
+    }
+    if (uploadFileType == 'json') {
       let reader = new FileReader();
       reader.readAsText(resultFile, 'UTF-8');
       reader.onload = function (e) {
         let data = this.result;
         console.log(data);
-        update(JSON.parse(data))
-        // objectAttributesCache.current = data
+        addObject(collectionName, JSON.parse(data))
       }
-      // console.log('new value', objectAttributesCache.current)
-      //手动触发更新
-      // update()
     } else {
       const formData = new FormData();
+      const params = {
+        fiilename: resultFile.name,
+      }
       formData.append('file', resultFile);
-      uploadFile(formData)
+      // const { _id } = await uploadFile(formData)
+      addLinkAfteruploadfile(objectV.id, formData)
+      // console.log(res)
     }
+    // console.log('new value', objectAttributesCache.current)
+    //手动触发更新
+    // update()
+    // }
+    // else {
+    // const formData = new FormData();
+    // formData.append('file', resultFile);
+    // uploadFile(formData)
+    // }
 
     setUploadVisible(false)
+    setTimeout(() => setFreshTag(e => !e), 500)
+    // window.location.reload()
+    // handleForceRefresh()
     // onSuccess()
   }
   // }
@@ -118,7 +147,7 @@ const ObjectTool = () => {
     // if (isMulTypeLinks) {
     setIsAddLinkSecondConfirm(true)
     // } else {
-    //   setAddLinkDialogState(true)
+    // setAddLinkDialogState(true)
     // }
   }
 
@@ -215,7 +244,7 @@ const ObjectTool = () => {
           </Box>
         )}
       </Typography>
-      {objectV.id && (
+      {objectV.id && !objectAttributes.data.filepath && !objectAttributes.data.creation_date && (
         <Box>
           <Button
             variant="contained"
@@ -277,34 +306,56 @@ const ObjectTool = () => {
 
           <ButtonGroup>
             <Button onClick={exportDoc}>Export Doc</Button>
-            <Button onClick={() => setUploadVisible(true)}>Import Doc</Button>
+            <Button onClick={() => {
+              setUploadFileType('file')
+              setUploadVisible(true)
+            }}>Import Link</Button>
             {/* <Input type="file"></Input> */}
 
           </ButtonGroup>
+        </Box>
+      )}
+      {/* files 目录下的特殊处理 */}
+      {objectV.id && objectAttributes.data.filepath && objectAttributes.data.creation_date && (
+        <Box>
+          <Button onClick={downLoadFile}>DownLoad file</Button>
+        </Box>
+      )}
+      {/* collection 层下的导入json */}
+      {JSON.stringify(objectAttributes.data) === '{}' && (
+        <Box>
+          <Button onClick={() => {
+            setUploadVisible(true)
+            setUploadFileType('json')
+          }}>Import Document</Button>
         </Box>
       )}
       {/* upload */}
       <Dialog open={uploadVisible} fullWidth>
         <DialogTitle>upload</DialogTitle>
         <DialogContent>
-          <Select
-            onChange={(e) => setUploadFileType(e.target.value)}
-            variant="outlined"
-            value={uploadFileType}
-            placeholder="Please select"
-          >
-            {['file', 'json'].map((e) => (
-              <MenuItem key={e} value={e}>
-                {e}
-              </MenuItem>
-            ))}
-          </Select>
+          {/* <Select
+onChange={(e) => setUploadFileType(e.target.value)}
+variant="outlined"
+value={uploadFileType}
+placeholder="Please select"
+>
+{['file', 'json'].map((e) => (
+<MenuItem key={e} value={e}>
+{e}
+</MenuItem>
+))}
+</Select> */}
           <Input type="file" id="upload_file"></Input>
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={() => setUploadVisible(false)}>Cancel</Button>
-          <Button onClick={() => { handleAddLink() }}>upload</Button>
+          <Button onClick={() => {
+            setUploadVisible(false)
+          }}>Cancel</Button>
+          <Button onClick={() => {
+            handleAddLink()
+          }}>upload</Button>
         </DialogActions>
       </Dialog>
       {/* add link */}
@@ -322,7 +373,7 @@ const ObjectTool = () => {
           <Button onClick={handleAddLinkDialogClose}>Cancel</Button>
         </DialogActions>
       </Dialog>
-      {/*add   */}
+      {/*add */}
       <Dialog open={isAddLinkSecondConfirm} fullWidth>
         <DialogContent>
           <Select

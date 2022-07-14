@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 import { getAllCollection } from '@/libs/service'
 import type { ICollection } from '@/libs/service'
 
-const useAllCollections = () => {
+const useAllCollections = (freshTag?: Boolean) => {
   const [dataState, setDataState] = useState<ICollection[]>([])
   const [loadingState, setLoadingState] = useState<boolean>(false)
 
   useEffect(() => {
     fetchDataList()
-  }, [])
+  }, [freshTag])
 
   const fetchDataList = async () => {
     setLoadingState(true)

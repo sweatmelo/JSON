@@ -8,13 +8,15 @@ import ObjectHandler from './object/handler'
 import CollectionList from './list'
 import View from './view'
 import AddDialog from './add-dialog'
+import { useState } from 'react'
 
 const DatabaseComp: React.FC = () => {
+  const [freshTag, setFreshTag] = useState(false)
   return (
     <Box display="flex" height="calc(100% - 64px)">
       <CollectionProvider>
         <ObjectProvider>
-          <CollectionList />
+          <CollectionList freshTag={freshTag} />
           <Container
             maxWidth="lg"
             sx={{
@@ -24,7 +26,7 @@ const DatabaseComp: React.FC = () => {
               }),
             }}
           >
-            <ObjectTool />
+            <ObjectTool setFreshTag={setFreshTag} />
             <Divider />
             <View />
             <AddDialog />
