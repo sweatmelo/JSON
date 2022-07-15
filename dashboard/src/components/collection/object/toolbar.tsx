@@ -65,18 +65,15 @@ const ObjectTool = ({ setFreshTag }) => {
 
   //下载文件
   const downLoadFile = async () => {
-    const res = downloadFile(objectV.id)
-    console.log(res)
-    // const elink = document.createElement('a')
-
-    // elink.href = url
-    // elink.setAttribute('download', fileName)
-    // elink.style.display = 'none'
-    // document.body.appendChild(elink)
-    // setTimeout(() => {
-    // elink.click()
-    // document.body.removeChild(elink)
-    // }, 66)
+    const elink = document.createElement('a')
+    elink.href = `http://127.0.0.1:5000/file/download/${objectV.id}`
+    elink.setAttribute('download', objectV.name)
+    elink.style.display = 'none'
+    document.body.appendChild(elink)
+    setTimeout(() => {
+      elink.click()
+      document.body.removeChild(elink)
+    }, 66)
   }
   const exportDoc = (data = objectAttributes.data, filename) => {
     if (!objectAttributes.data) {
@@ -309,7 +306,7 @@ const ObjectTool = ({ setFreshTag }) => {
             <Button onClick={() => {
               setUploadFileType('file')
               setUploadVisible(true)
-            }}>Import Link</Button>
+            }}>Import File</Button>
             {/* <Input type="file"></Input> */}
 
           </ButtonGroup>
@@ -322,7 +319,7 @@ const ObjectTool = ({ setFreshTag }) => {
         </Box>
       )}
       {/* collection 层下的导入json */}
-      {JSON.stringify(objectAttributes.data) === '{}' && (
+      {JSON.stringify(objectAttributes.data) === '{}' && collectionName !== 'Files' && (
         <Box>
           <Button onClick={() => {
             setUploadVisible(true)
