@@ -11,7 +11,7 @@ import { ArrowRightOutlined, Add } from '@mui/icons-material'
 
 import Drawer from '@/components/drawer'
 import theme from '@/libs/theme'
-import { getCollectionTree, IDocument, getSubObject, getLinkList } from '@/libs/service'
+import { getCollectionTree, IDocument, getSubObject, getLinkList, getSubName } from '@/libs/service'
 import { useCollectionContext } from '@/providers/collection'
 import { useObjectContext, ObjectModes, TObject } from '@/providers/object'
 import useAllCollections from '@/hooks/useAllCollections'
@@ -144,7 +144,7 @@ interface CollectionItemBetaProps {
 }
 
 const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
-  objectV: { id: objectId, name: objectName },
+  objectV: { id: objectId, name: objectName, attribute_name },
   level,
 }) => {
   const [dataState, setDataState] = useState<IDocument[]>([])
@@ -171,6 +171,7 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
       key: id,
       id: objectId,
       name: objectName,
+      attribute_name
     })
   }
 
@@ -198,12 +199,13 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
             }),
           }}
         />
-        <ListItemText primary={objectName} />
+        {!attribute_name && <ListItemText primary={`${objectName}`} />}
+        {attribute_name && <ListItemText primary={`${objectName} (${attribute_name})`} />}
       </HoverListItem>
       <Collapse in={openState} timeout="auto" unmountOnExit>
         {dataState.length > 0 &&
-          dataState.map(({ _id, name }) => (
-            <CollectionItemBeta key={_id} objectV={{ id: _id, name }} level={level + 1} />
+          dataState.map(({ _id, name, attribute_name }) => (
+            <CollectionItemBeta key={_id} objectV={{ id: _id, name, attribute_name }} level={level + 1} />
           ))}
       </Collapse>
     </Box>

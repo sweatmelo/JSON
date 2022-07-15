@@ -21,7 +21,7 @@ import CollectionList from './link-list'
 import useObjectSubObject from '@/hooks/useObjectSubObject'
 import Spin from '@/components/spin'
 // import { useRouter } from 'next/router'
-import { uploadFile, downloadFile, addObject, addLinkAfteruploadfile } from '@/libs/service'
+import { uploadFile, downloadFile, addObject, addLinkAfteruploadfile, deleteObject } from '@/libs/service'
 const ObjectTool = ({ setFreshTag }) => {
   const [addLinkDialogState, setAddLinkDialogState] = useState<boolean>(false)
   const [deleteLinkDialogState, setDeleteLinkDialogState] = useState<boolean>(false)
@@ -74,6 +74,11 @@ const ObjectTool = ({ setFreshTag }) => {
       elink.click()
       document.body.removeChild(elink)
     }, 66)
+  }
+  const deleteAction = async () => {
+    debugger
+    deleteObject(objectV.id)
+    setFreshTag(e => !e)
   }
   const exportDoc = (data = objectAttributes.data, filename) => {
     if (!objectAttributes.data) {
@@ -313,8 +318,9 @@ const ObjectTool = ({ setFreshTag }) => {
         </Box>
       )}
       {/* files 目录下的特殊处理 */}
-      {objectV.id && objectAttributes.data.filepath && objectAttributes.data.creation_date && (
+      {objectV.id && objectAttributes.data.filepath && objectAttributes.data.creation_date && collectionName !== '' && (
         <Box>
+          <Button onClick={deleteAction} color="error">Delete</Button>
           <Button onClick={downLoadFile}>DownLoad file</Button>
         </Box>
       )}
