@@ -112,7 +112,7 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name }) => {
     <Fragment>
       <HoverListItem
         active={collectionName === name}
-        secondaryAction={renderAction()}
+        secondaryAction={collectionName !== 'Files' ? renderAction() : null}
         onClick={handleClick}
       >
         <ArrowRightOutlined
@@ -130,8 +130,8 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name }) => {
 
       <Collapse in={openState} timeout="auto" unmountOnExit>
         {treeDataState.length > 0 &&
-          treeDataState.map(({ _id, name }) => (
-            <CollectionItemBeta key={_id} objectV={{ id: _id, name }} level={1} />
+          treeDataState.map(e => ({ ...e, pN: collectionName })).map(({ _id, name, pN }) => (
+            <CollectionItemBeta key={_id} objectV={{ id: _id, name }} pN={pN} level={1} />
           ))}
       </Collapse>
     </Fragment>
@@ -146,10 +146,11 @@ interface CollectionItemBetaProps {
 const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   objectV: { id: objectId, name: objectName, attribute_name },
   level,
+  pN
 }) => {
   const [dataState, setDataState] = useState<IDocument[]>([])
   const [openState, setOpenState] = useState<boolean>(false)
-  const { forceRefreshFlag } = useCollectionContext('CollectionItemBeta')
+  const { forceRefreshFlag, handleCollectionNameChange } = useCollectionContext('CollectionItemBeta')
   const { objectV, handleObjectVChange } = useObjectContext('CollectionItemBeta')
   const id = useId()
 
@@ -167,6 +168,7 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
 
   const handleClick = () => {
     setOpenState(!openState)
+    handleCollectionNameChange(pN)
     handleObjectVChange({
       key: id,
       id: objectId,

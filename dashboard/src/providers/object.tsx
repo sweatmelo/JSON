@@ -104,22 +104,26 @@ const ObjectProvider: React.FC<ObjectProviderProps> = ({ children }) => {
     }
   }
 
-  const handleUpdate = async (data = null) => {
+  const handleUpdate = async (data = null, id) => {
+    debugger
     console.log('update', objectAttributesCacheRef.current)
+    let res: any
+    const _id = id
     // debugger
     // if (!objectState.id) {
-    // return
+    // // return
     // }
     try {
-      if (!data)
-        await updateObjectAttributes(objectState.id, objectAttributesCacheRef.current)
+      if (!data && objectState.id)
+        res = await updateObjectAttributes(objectState.id, objectAttributesCacheRef.current)
       else
-        await updateObjectAttributes(objectState.id, data)
+        await updateObjectAttributes(id, data)
       handleForceRefresh()
-      await objectAttributes.refresh()
+      res = await objectAttributes.refresh()
     } catch (e) {
       console.warn(e)
     }
+    return res
   }
 
   const handleSubmit = (object: IObejctAttributes) => {

@@ -4,7 +4,7 @@ import {
   Dialog, DialogActions, DialogContent, DialogTitle, Theme,
   InputLabel, MenuItem, Select, Input, TextField, FormControl
 } from '@mui/material'
-import { Add, Delete, Update } from '@mui/icons-material'
+import { Add, Delete, Update, Edit, Check } from '@mui/icons-material'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import ButtonGroup from '@mui/material/ButtonGroup'
@@ -21,6 +21,7 @@ import CollectionList from './link-list'
 import useObjectSubObject from '@/hooks/useObjectSubObject'
 import Spin from '@/components/spin'
 // import { useRouter } from 'next/router'
+import { Alert, Snackbar } from '@mui/material'
 import { uploadFile, downloadFile, addObject, addLinkAfteruploadfile, deleteObject } from '@/libs/service'
 const ObjectTool = ({ setFreshTag }) => {
   const [addLinkDialogState, setAddLinkDialogState] = useState<boolean>(false)
@@ -39,8 +40,20 @@ const ObjectTool = ({ setFreshTag }) => {
   const curSubObject = useObjectSubObject(objectV.id, [forceRefreshFlag])
   const deleteLinkIdRef = useRef<string>('')
   const [currentType, setCurrentType] = useState('')
+  const [changeLinkDialogState, setChangeLinkDialogState] = useState(false)
   // console.log('...', objectAttributes);
+  const subObject = useMemo(() => {
+    return curSubObject.data.map(e => {
+      e.referName = objectAttributes.data[e.attribute_name]?.referenced_collection
+      return e
+    })
+  }, [curSubObject])
 
+  const UpdateRes = async () => {
+    const res = await update()
+    !res && setUpdateSuccess(true)
+    res && setUpdateError(true)
+  }
   //是否有两种link
   const isMulTypeLinks = useMemo(() => {
     let tag = 0
@@ -62,7 +75,11 @@ const ObjectTool = ({ setFreshTag }) => {
     })
     return tag > 1
   }, [objectAttributes])
-
+  const changeLink = (e) => {
+    console.log(e)
+    setCurrentType({ value: e.attribute_name, key: e.referName, _id: e._id })
+    setChangeLinkDialogState(true)
+  }
   //下载文件
   const downLoadFile = async () => {
     const elink = document.createElement('a')
@@ -76,7 +93,7 @@ const ObjectTool = ({ setFreshTag }) => {
     }, 66)
   }
   const deleteAction = async () => {
-    debugger
+    // debugger
     deleteObject(objectV.id)
     setFreshTag(e => !e)
   }
@@ -122,25 +139,13 @@ const ObjectTool = ({ setFreshTag }) => {
         fiilename: resultFile.name,
       }
       formData.append('file', resultFile);
-      // const { _id } = await uploadFile(formData)
-      addLinkAfteruploadfile(objectV.id, formData)
-      // console.log(res)
+      await addLinkAfteruploadfile(objectV.id, formData)
+      objectAttributes.refresh()
     }
-    // console.log('new value', objectAttributesCache.current)
-    //手动触发更新
-    // update()
-    // }
-    // else {
-    // const formData = new FormData();
-    // formData.append('file', resultFile);
-    // uploadFile(formData)
-    // }
 
     setUploadVisible(false)
     setTimeout(() => setFreshTag(e => !e), 500)
-    // window.location.reload()
-    // handleForceRefresh()
-    // onSuccess()
+
   }
   // }
   // handleAddLinkDialogClose()
@@ -188,7 +193,7 @@ const ObjectTool = ({ setFreshTag }) => {
     setDeleteLinkDialogState(true)
   }
 
-  const handleDeleteDialogOk = (id?: string) => {
+  const handleDeleteDialogOk = async (id?: string) => {
     if (id && typeof id === 'string') {
       deleteLinkIdRef.current = id
     }
@@ -204,10 +209,14 @@ const ObjectTool = ({ setFreshTag }) => {
         ...objectAttributesCache.current,
         links,
       }
-      update()
+      await update()
     }
     handleConfirmDeleteDialogClose()
     handleDeleteDialogClose()
+    objectAttributes.refresh()
+    // const { refresh } = useObjectContext('ObjectAttributes')
+    // refresh()
+
   }
 
   const handleDeleteDialogClose = () => {
@@ -218,126 +227,143 @@ const ObjectTool = ({ setFreshTag }) => {
   const handleConfirmDeleteDialogClose = () => {
     setConfirmDeleteLinkDialogState(false)
   }
+  const [updateSuccess, setUpdateSuccess] = useState(false)
+  const [updateError, setUpdateError] = useState(false)
   return (
-    <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="space-between"
-      sx={{ width: '100%' }}
-      py={2}
-    >
-      <Typography component="h2" fontSize={18} fontWeight="bold" textTransform="uppercase">
-        <Box
-          component="span"
-          color={(theme: Theme) => theme.palette.primary.light}
-          sx={{
-            cursor: 'pointer',
-          }}
-          onClick={handleObjectVChange.bind(null, objectInitValue)}
-        >
-          {collectionName || 'None'}
-        </Box>
-        {objectV.name && (
-          <Box component="span">
-            <Box component="span" mx={1}>
-              /
+    <>
+      <Snackbar
+        open={updateSuccess}
+        autoHideDuration={2000}
+        onClose={() => setUpdateSuccess(false)}
+      >
+        <Alert severity="success">update success</Alert>
+      </Snackbar>
+      <Snackbar
+        open={updateError}
+        autoHideDuration={2000}
+        onClose={() => setUpdateError(false)}
+      >
+        <Alert severity="error">update fail</Alert>
+      </Snackbar>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ width: '100%' }}
+        py={2}
+      >
+        <Typography component="h2" fontSize={18} fontWeight="bold" textTransform="uppercase">
+          <Box
+            component="span"
+            color={(theme: Theme) => theme.palette.primary.light}
+            sx={{
+              cursor: 'pointer',
+            }}
+            onClick={handleObjectVChange.bind(null, objectInitValue)}
+          >
+            {collectionName || 'None'}
+          </Box>
+          {objectV.name && (
+            <Box component="span">
+              <Box component="span" mx={1}>
+                /
+              </Box>
+              {objectV.name}
             </Box>
-            {objectV.name}
+          )}
+        </Typography>
+        {objectV.id && !objectAttributes.data.filepath && !objectAttributes.data.creation_date && (
+          <Box>
+            <Button
+              variant="contained"
+              sx={{ marginRight: 2 }}
+              startIcon={<Add />}
+              onClick={handleAddLinkDialogShow}
+            >
+              Add Link
+            </Button>
+            <Button
+              variant="contained"
+              sx={{ marginRight: 2 }}
+              startIcon={<Update />}
+              onClick={UpdateRes}
+            >
+              Update
+            </Button>
+
+            <LoadingButton
+              variant="contained"
+              color="error"
+              sx={{ marginRight: 2 }}
+              startIcon={<Delete />}
+              onClick={(e) => setRemoveBtnTargetState(e.currentTarget)}
+            >
+              Delete
+            </LoadingButton>
+
+            <Button
+              variant="contained"
+              color="error"
+              sx={{ marginRight: 2 }}
+              startIcon={<Delete />}
+              onClick={handleDeleteDialogShow}
+            >
+              Edit Link
+            </Button>
+
+            <Popover
+              id="removeObjectPopover"
+              open={Boolean(removeBtnTargetState)}
+              anchorEl={removeBtnTargetState}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+            >
+              <Box px={6} py={2}>
+                <Box mb={2}>Confirm delete</Box>
+                <LoadingButton variant="contained" onClick={handleRemove} style={{ marginRight: '10px' }}>
+                  Confirm
+                </LoadingButton>
+                <LoadingButton variant="contained" onClick={() => setRemoveBtnTargetState(null)}>
+                  Cancel
+                </LoadingButton>
+              </Box>
+            </Popover>
+
+
+            <ButtonGroup>
+              <Button onClick={exportDoc}>Export Doc</Button>
+              <Button onClick={() => {
+                setUploadFileType('file')
+                setUploadVisible(true)
+              }}>Import File</Button>
+              {/* <Input type="file"></Input> */}
+
+            </ButtonGroup>
           </Box>
         )}
-      </Typography>
-      {objectV.id && !objectAttributes.data.filepath && !objectAttributes.data.creation_date && (
-        <Box>
-          <Button
-            variant="contained"
-            sx={{ marginRight: 2 }}
-            startIcon={<Add />}
-            onClick={handleAddLinkDialogShow}
-          >
-            Add Link
-          </Button>
-          <Button
-            variant="contained"
-            sx={{ marginRight: 2 }}
-            startIcon={<Update />}
-            onClick={() => update()}
-          >
-            Update
-          </Button>
-
-          <LoadingButton
-            variant="contained"
-            color="error"
-            sx={{ marginRight: 2 }}
-            startIcon={<Delete />}
-            onClick={(e) => setRemoveBtnTargetState(e.currentTarget)}
-          >
-            Delete
-          </LoadingButton>
-
-          <Button
-            variant="contained"
-            color="error"
-            sx={{ marginRight: 2 }}
-            startIcon={<Delete />}
-            onClick={handleDeleteDialogShow}
-          >
-            Delete Link
-          </Button>
-
-          <Popover
-            id="removeObjectPopover"
-            open={Boolean(removeBtnTargetState)}
-            anchorEl={removeBtnTargetState}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-          >
-            <Box px={6} py={2}>
-              <Box mb={2}>Confirm delete</Box>
-              <LoadingButton variant="contained" onClick={handleRemove} style={{ marginRight: '10px' }}>
-                Confirm
-              </LoadingButton>
-              <LoadingButton variant="contained" onClick={() => setRemoveBtnTargetState(null)}>
-                Cancel
-              </LoadingButton>
-            </Box>
-          </Popover>
-
-
-          <ButtonGroup>
-            <Button onClick={exportDoc}>Export Doc</Button>
+        {/* files 目录下的特殊处理 */}
+        {objectV.id && objectAttributes.data.filepath && objectAttributes.data.creation_date && collectionName !== '' && (
+          <Box>
+            <Button onClick={deleteAction} color="error">Delete</Button>
+            <Button onClick={downLoadFile}>DownLoad file</Button>
+          </Box>
+        )}
+        {/* collection 层下的导入json */}
+        {JSON.stringify(objectAttributes.data) === '{}' && collectionName !== 'Files' && (
+          <Box>
             <Button onClick={() => {
-              setUploadFileType('file')
               setUploadVisible(true)
-            }}>Import File</Button>
-            {/* <Input type="file"></Input> */}
-
-          </ButtonGroup>
-        </Box>
-      )}
-      {/* files 目录下的特殊处理 */}
-      {objectV.id && objectAttributes.data.filepath && objectAttributes.data.creation_date && collectionName !== '' && (
-        <Box>
-          <Button onClick={deleteAction} color="error">Delete</Button>
-          <Button onClick={downLoadFile}>DownLoad file</Button>
-        </Box>
-      )}
-      {/* collection 层下的导入json */}
-      {JSON.stringify(objectAttributes.data) === '{}' && collectionName !== 'Files' && (
-        <Box>
-          <Button onClick={() => {
-            setUploadVisible(true)
-            setUploadFileType('json')
-          }}>Import Document</Button>
-        </Box>
-      )}
-      {/* upload */}
-      <Dialog open={uploadVisible} fullWidth>
-        <DialogTitle>upload</DialogTitle>
-        <DialogContent>
-          {/* <Select
+              setUploadFileType('json')
+            }}>Import Document</Button>
+          </Box>
+        )}
+        {/* upload */}
+        <Dialog open={uploadVisible} fullWidth>
+          <DialogTitle>upload</DialogTitle>
+          <DialogContent>
+            {/* <Select
 onChange={(e) => setUploadFileType(e.target.value)}
 variant="outlined"
 value={uploadFileType}
@@ -349,112 +375,140 @@ placeholder="Please select"
 </MenuItem>
 ))}
 </Select> */}
-          <Input type="file" id="upload_file"></Input>
-        </DialogContent>
+            <Input type="file" id="upload_file"></Input>
+          </DialogContent>
 
-        <DialogActions>
-          <Button onClick={() => {
-            setUploadVisible(false)
-          }}>Cancel</Button>
-          <Button onClick={() => {
-            handleAddLink()
-          }}>upload</Button>
-        </DialogActions>
-      </Dialog>
-      {/* add link */}
-      <Dialog open={addLinkDialogState} fullWidth>
-        <DialogTitle>Add Link</DialogTitle>
-        <DialogContent>
-          <CollectionList
-            currentType={currentType}
-            newLinkName={newLinkName}
-            newLinkType={newLinkType}
-            handleAddLinkDialogClose={handleAddLinkDialogClose} />
-        </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
+              setUploadVisible(false)
+            }}>Cancel</Button>
+            <Button onClick={() => {
+              handleAddLink()
+            }}>upload</Button>
+          </DialogActions>
+        </Dialog>
+        {/* add link */}
+        <Dialog open={addLinkDialogState} fullWidth>
+          <DialogTitle>Add Link</DialogTitle>
+          <DialogContent>
+            <CollectionList
+              currentType={currentType}
+              newLinkName={newLinkName}
+              newLinkType={newLinkType}
+              handleAddLinkDialogClose={handleAddLinkDialogClose} />
+          </DialogContent>
 
-        <DialogActions>
-          <Button onClick={handleAddLinkDialogClose}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-      {/*add */}
-      <Dialog open={isAddLinkSecondConfirm} fullWidth>
-        <DialogContent>
-          <Select
-            // value={options[0].value}
-            onChange={handleSelect}
-            variant="outlined"
-            placeholder="Please select"
-          >
-            {options.map(({ value, label }) => (
-              <MenuItem key={label} value={value}>
-                {value.value}
-              </MenuItem>
-            ))}
-          </Select>
-          {currentType.value === 'create new Link' && <TextField value={newLinkName} onChange={newLinkChange} style={{ marginLeft: '10px' }}>
+          <DialogActions>
+            <Button onClick={handleAddLinkDialogClose}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+        {/*add */}
+        <Dialog open={isAddLinkSecondConfirm} fullWidth>
+          <DialogContent>
+            <Select
+              // value={options[0].value}
+              onChange={handleSelect}
+              variant="outlined"
+              placeholder="Please select"
+            >
+              {options.map(({ value, label }) => (
+                <MenuItem key={label} value={value}>
+                  {value.value}
+                </MenuItem>
+              ))}
+            </Select>
+            {currentType.value === 'create new Link' && <TextField value={newLinkName} onChange={newLinkChange} style={{ marginLeft: '10px' }}>
 
-          </TextField>}
-          {/* {currentType === 'create new Link' && <Button onClick={() => setAddLinkDialogState(true)}>confirm</Button>} */}
-          {currentType.value === 'create new Link' &&
-            <FormControl fullWidth>
-              <InputLabel id="select-label">linkType</InputLabel>
-              <Select
-                label='linkType'
-                labelId="select-label"
-                onChange={(e) => {
-                  setNewLinkType(e.target.value)
-                  setAddLinkDialogState(true)
-                  // setCurrentType({ value: '' })
-                }}
-              // variant="outlined"
-              >
-                {['list', 'single'].map((e) => (
-                  <MenuItem key={e} value={e}>
-                    {e}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsAddLinkSecondConfirm(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
+            </TextField>}
+            {/* {currentType === 'create new Link' && <Button onClick={() => setAddLinkDialogState(true)}>confirm</Button>} */}
+            {currentType.value === 'create new Link' &&
+              <FormControl fullWidth>
+                <InputLabel id="select-label">linkType</InputLabel>
+                <Select
+                  label='linkType'
+                  labelId="select-label"
+                  onChange={(e) => {
+                    setNewLinkType(e.target.value)
+                    setAddLinkDialogState(true)
+                    // setCurrentType({ value: '' })
+                  }}
+                // variant="outlined"
+                >
+                  {['list', 'single'].map((e) => (
+                    <MenuItem key={e} value={e}>
+                      {e}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsAddLinkSecondConfirm(false)}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
 
-      <Dialog open={deleteLinkDialogState} fullWidth>
-        <DialogTitle>Delete Link</DialogTitle>
-        <DialogContent>
-          <Spin spin={curSubObject.loading}>
-            <List>
-              {
-                curSubObject.data.length === 0 ? 'None' :
-                  curSubObject.data.map(
-                    item => (
-                      <ListItem secondaryAction={
-                        <IconButton onClick={handleDeleteDialogOk.bind(null, item._id)}>
-                          <Delete />
-                        </IconButton>
-                      }>{item.name}</ListItem>
-                    ))
-              }
-            </List>
-          </Spin>
-        </DialogContent>
+        <Dialog open={deleteLinkDialogState} fullWidth>
+          <DialogTitle>Edit Link</DialogTitle>
+          <DialogContent>
+            <Spin spin={curSubObject.loading}>
+              <List>
+                {
+                  subObject.length === 0 ? 'None' :
+                    subObject.map(
+                      item => (
+                        <ListItem secondaryAction={
+                          <>
+                            <IconButton>
+                              <Edit onClick={() => changeLink(item)} />
+                            </IconButton>
+                            <IconButton onClick={handleDeleteDialogOk.bind(null, item._id)}>
+                              <Delete />
+                            </IconButton>
+                          </>
+                        }>{`${item.name} (${item.attribute_name})`}</ListItem>
+                      ))
+                }
+              </List>
+            </Spin>
+          </DialogContent>
 
-        <DialogActions>
-          <Button onClick={handleDeleteDialogClose}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
+          <DialogActions>
+            <Button onClick={handleDeleteDialogClose}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
 
 
-      <Dialog open={confirmDeleteLinkDialogState}>
-        <DialogTitle>Confirm delete Link</DialogTitle>
-        <DialogActions>
-          <Button variant="contained" onClick={handleDeleteDialogOk.bind(null, undefined)}>Confirm</Button>
-          <Button onClick={handleConfirmDeleteDialogClose}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Dialog open={confirmDeleteLinkDialogState}>
+          <DialogTitle>Confirm delete Link</DialogTitle>
+          <DialogActions>
+            <Button variant="contained" onClick={handleDeleteDialogOk.bind(null, undefined)}>Confirm</Button>
+            <Button onClick={handleConfirmDeleteDialogClose}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={changeLinkDialogState} fullWidth>
+          <DialogTitle>Change Link</DialogTitle>
+          <DialogContent>
+            <CollectionList
+              currentType={currentType}
+              isChange={true}
+              // newLinkName={newLinkName}
+              // newLinkType={newLinkType}
+              handleAddLinkDialogClose={() => {
+                setChangeLinkDialogState(false)
+                setCurrentType({ key: '', value: '' })
+              }} />
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={() => {
+              setChangeLinkDialogState(false)
+              setCurrentType({ key: '', value: '' })
+            }}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </>
   )
 }
 

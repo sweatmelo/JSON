@@ -5,10 +5,11 @@ import Box from '@mui/material/Box'
 import Collapse from '@mui/material/Collapse'
 import ListItemText from '@mui/material/ListItemText'
 import IconButton from '@mui/material/IconButton'
+// import Alert from '@mui/material/Alert';
 import { styled } from '@mui/material/styles'
 import ListItem, { ListItemProps } from '@mui/material/ListItem'
-import { ArrowRightOutlined, Add } from '@mui/icons-material'
-
+import { ArrowRightOutlined, Add, Check } from '@mui/icons-material'
+import { updateObjectAttributes } from '@/libs/service'
 import Drawer from '@/components/drawer'
 import theme from '@/libs/theme'
 import { getCollectionTree, IDocument, getSubObject } from '@/libs/service'
@@ -66,7 +67,7 @@ interface CollectionItemProps {
 }
 
 const CollectionItem: React.FC<CollectionItemProps> = ({ name, onError, onSuccess, currentType,
-  newLinkName, newLinkType, handleAddLinkDialogClose }) => {
+  newLinkName, newLinkType, handleAddLinkDialogClose, isChange, }) => {
   const [treeDataState, setTreeDataState] = useState<IDocument[]>([])
   //展开状态
   const [openState, setOpenState] = useState<boolean>(false)
@@ -92,6 +93,7 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name, onError, onSucces
     try {
       const { documents } = await getCollectionTree(name)
       setTreeDataState(documents)
+      console.log(documents);
     } catch (e) {
       console.warn(e)
     }
@@ -115,9 +117,10 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name, onError, onSucces
 
       <Collapse in={openState} timeout="auto" unmountOnExit>
         {treeDataState.length > 0 &&
-          treeDataState.map(({ _id, name }) => (
+          treeDataState.map(({ _id, name, attribute_name }) => (
             <CollectionItemBeta
               key={_id}
+              attribute_name={attribute_name}
               objectV={{ id: _id, name }}
               level={1}
               onSuccess={onSuccess}
@@ -126,7 +129,9 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name, onError, onSucces
               parentName={parentName}
               newLinkName={newLinkName}
               newLinkType={newLinkType}
+              isChange={isChange}
               handleAddLinkDialogClose={handleAddLinkDialogClose}
+            // setEditState={setEditState}
 
             />
           ))}
@@ -153,13 +158,16 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   newLinkName,
   newLinkType,
   parentName,
-  handleAddLinkDialogClose
+  handleAddLinkDialogClose,
+  isChange,
+  // setEditState
 
 }) => {
   const [dataState, setDataState] = useState<IDocument[]>([])
+  // const [editState, setEditState] = useState(false)
   const [openState, setOpenState] = useState<boolean>(false)
   const { forceRefreshFlag, handleForceRefresh } = useCollectionContext('CollectionItemBeta')
-  const { objectV, handleObjectVChange, objectAttributesCache, update } =
+  const { objectV, handleObjectVChange, objectAttributesCache, update, objectAttributes } =
     useObjectContext('CollectionItemBeta')
   const id = useId()
 
@@ -180,7 +188,7 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   }
   //处理添加link
   const handleAddLink: MouseEventHandler = (e) => {
-    e.stopPropagation()
+    // e.stopPropagation()
     // debugger
     if (newLinkName && newLinkType === 'list') {
       objectAttributesCache.current[newLinkName] = {
@@ -224,6 +232,30 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
     }
     handleAddLinkDialogClose()
   }
+  const handleChange = async (e) => {
+    e.stopPropagation()
+
+    // console.log(objectV, currentType._id);
+    let data = JSON.parse(JSON.stringify(objectAttributesCache.current))
+    data[currentType.value].object_references?.forEach(e => {
+      if (e.$oid === currentType._id) {
+        // debugger
+        e.$oid = objectId
+      }
+
+    })
+    if (data.object_reference) {
+      data.object_reference.$oid = objectId
+    }
+    console.log(data)
+    // setEditState(true)
+    // onSuccess()
+    await updateObjectAttributes(objectAttributesCache.current._id.$oid, data)
+    handleAddLinkDialogClose()
+    // setEditState(false)
+    objectAttributes.refresh()
+
+  }
   //获取子目录
   const handleFetchSubObject = async () => {
     try {
@@ -237,14 +269,15 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   const renderAction = () => {
     return (
       <Fragment>
-        <IconButton color="inherit" size="small" onClick={handleAddLink}>
-          <Add />
+        <IconButton color="inherit" size="small" onClick={isChange ? handleChange : handleAddLink}>
+          {isChange ? <Check /> : <Add />}
         </IconButton>
       </Fragment>
     )
   }
 
   return (
+    // <Spin spin={editState}>
     <Box>
       <HoverListItem
         active={objectV.key === id}
@@ -266,9 +299,11 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
       </HoverListItem>
       <Collapse in={openState} timeout="auto" unmountOnExit>
         {dataState.length > 0 &&
-          dataState.map(({ _id, name }) => (
+          dataState.map(({ _id, name, attribute_name }) => (
             <CollectionItemBeta
               key={_id}
+              attribute_name={attribute_name}
+              isChange={true}
               objectV={{ id: _id, name }}
               level={level + 1}
               onSuccess={onSuccess}
@@ -277,6 +312,8 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
           ))}
       </Collapse>
     </Box>
+    // </Spin>
+
   )
 }
 
@@ -285,16 +322,18 @@ interface CollectionListProps {
   currentType?: object | string,
   newLinkName?: string
   newLinkType?: string,
+  isChange?: Boolean,
   handleAddLinkDialogClose(): void
 }
 
 const CollectionList: React.FC<CollectionListProps> = ({ type = 'dialog', currentType, newLinkType,
-  newLinkName, handleAddLinkDialogClose }) => {
+  newLinkName, handleAddLinkDialogClose, isChange = false }) => {
   const [addLinkSuccessState, setAddLinkSuccessState] = useState<boolean>(false)
+  // const [editState, setEditState] = useState(false)
   const [addLinkErrorState, setAddLinkErrorState] = useState<boolean>(false)
   const [addLinkErrorMsgState, setAddLinkErrorMsgState] = useState<string>('')
   const { data: collectionList, loading: collectionLoading } = useAllCollections()
-
+  // window.setEditState = setEditState
   const handleSuccess = () => {
     if (addLinkSuccessState) {
       return
@@ -312,13 +351,15 @@ const CollectionList: React.FC<CollectionListProps> = ({ type = 'dialog', curren
 
   return (
     <Fragment>
+      {/* <Alert severity="error">This is an error alert — check it out!</Alert> */}
+      {/* <Spin spin={editState}> */}
       {/* tip message */}
       <Snackbar
         open={addLinkSuccessState}
         autoHideDuration={2000}
         onClose={() => setAddLinkSuccessState(false)}
       >
-        <Alert severity="success">Add link success</Alert>
+        <Alert severity="success">updating Please wait</Alert>
       </Snackbar>
       <Snackbar
         open={addLinkErrorState}
@@ -339,7 +380,9 @@ const CollectionList: React.FC<CollectionListProps> = ({ type = 'dialog', curren
               currentType={currentType}
               newLinkName={newLinkName}
               newLinkType={newLinkType}
+              isChange={isChange}
               handleAddLinkDialogClose={handleAddLinkDialogClose}
+            // setEditState={setEditState}
             />
           )) : collectionList.map(({ name }) => (
             <CollectionItem
@@ -350,11 +393,14 @@ const CollectionList: React.FC<CollectionListProps> = ({ type = 'dialog', curren
               newLinkName={newLinkName}
               newLinkType={newLinkType}
               name={name}
+              // setEditState={setEditState}
               handleAddLinkDialogClose={handleAddLinkDialogClose}
             />
           ))}
         </Spin>
       </List>
+      {/* </Spin> */}
+
     </Fragment>
   )
 }
