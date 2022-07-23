@@ -51,8 +51,9 @@ const ObjectTool = ({ setFreshTag }) => {
 
   const UpdateRes = async () => {
     const res = await update()
-    !res && setUpdateSuccess(true)
-    res && setUpdateError(true)
+    res?.message?.includes('sucessfull') && setUpdateSuccess(true)
+    !res && setUpdateError(true)
+    setFreshTag(e => !e)
   }
   //是否有两种link
   const isMulTypeLinks = useMemo(() => {
@@ -83,7 +84,10 @@ const ObjectTool = ({ setFreshTag }) => {
   //下载文件
   const downLoadFile = async () => {
     const elink = document.createElement('a')
-    elink.href = `http://127.0.0.1:5000/file/download/${objectV.id}`
+    if (window.location.host !== 'http://localhost:3000/')
+      elink.href = `https://iot.wzl-mq.rwth-aachen.de/am-database/api/file/download/${objectV.id}`
+    else
+      elink.href = `http://127.0.0.1:5000/file/download/${objectV.id}`
     elink.setAttribute('download', objectV.name)
     elink.style.display = 'none'
     document.body.appendChild(elink)
@@ -210,6 +214,7 @@ const ObjectTool = ({ setFreshTag }) => {
         links,
       }
       await update()
+      setFreshTag(e => !e)
     }
     handleConfirmDeleteDialogClose()
     handleDeleteDialogClose()
@@ -492,6 +497,7 @@ placeholder="Please select"
             <CollectionList
               currentType={currentType}
               isChange={true}
+              setFreshTag={setFreshTag}
               // newLinkName={newLinkName}
               // newLinkType={newLinkType}
               handleAddLinkDialogClose={() => {

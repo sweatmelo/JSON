@@ -28,7 +28,7 @@ const DatabaseComp: React.FC = () => {
           >
             <ObjectTool setFreshTag={setFreshTag} />
             <Divider />
-            <View />
+            <View freshTag={freshTag} />
             <AddDialog />
           </Container>
           <ObjectHandler />

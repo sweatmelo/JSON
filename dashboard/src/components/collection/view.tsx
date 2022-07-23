@@ -6,7 +6,7 @@ import { useObjectContext } from '@/providers/object'
 import ObjectAttributes from './object/attributes'
 import CollectionSchema from './schema'
 
-const View: React.FC = () => {
+const View: React.FC = ({ freshTag }) => {
   const { collectionName } = useCollectionContext('View')
   const { objectV } = useObjectContext('View')
 
@@ -18,7 +18,7 @@ const View: React.FC = () => {
     )
   }
 
-  return objectV.id ? <ObjectAttributes /> : <CollectionSchema />
+  return objectV.id ? <ObjectAttributes freshTag={freshTag} /> : <CollectionSchema />
 }
 
 export default View

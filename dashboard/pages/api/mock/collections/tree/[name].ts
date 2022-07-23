@@ -55,7 +55,7 @@ const handler: NextApiHandler = (req, res) => {
     method,
   } = req
 
-  console.log(name)
+  // console.log(name)
 
   switch (method) {
     case 'GET':

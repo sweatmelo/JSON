@@ -67,7 +67,7 @@ interface CollectionItemProps {
 }
 
 const CollectionItem: React.FC<CollectionItemProps> = ({ name, onError, onSuccess, currentType,
-  newLinkName, newLinkType, handleAddLinkDialogClose, isChange, }) => {
+  newLinkName, newLinkType, handleAddLinkDialogClose, isChange, setFreshTag }) => {
   const [treeDataState, setTreeDataState] = useState<IDocument[]>([])
   //展开状态
   const [openState, setOpenState] = useState<boolean>(false)
@@ -131,6 +131,7 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name, onError, onSucces
               newLinkType={newLinkType}
               isChange={isChange}
               handleAddLinkDialogClose={handleAddLinkDialogClose}
+              setFreshTag={setFreshTag}
             // setEditState={setEditState}
 
             />
@@ -160,6 +161,7 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   parentName,
   handleAddLinkDialogClose,
   isChange,
+  setFreshTag
   // setEditState
 
 }) => {
@@ -236,7 +238,8 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
     e.stopPropagation()
 
     // console.log(objectV, currentType._id);
-    let data = JSON.parse(JSON.stringify(objectAttributesCache.current))
+    // debugger
+    let data = JSON.parse(JSON.stringify(objectAttributes.data))
     data[currentType.value].object_references?.forEach(e => {
       if (e.$oid === currentType._id) {
         // debugger
@@ -244,13 +247,14 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
       }
 
     })
-    if (data.object_reference) {
-      data.object_reference.$oid = objectId
+    if (data[currentType.value].object_reference) {
+      data[currentType.value].object_reference.$oid = objectId
     }
-    console.log(data)
+    // console.log(data)
     // setEditState(true)
     // onSuccess()
-    await updateObjectAttributes(objectAttributesCache.current._id.$oid, data)
+    await updateObjectAttributes(objectAttributes.data._id.$oid, data)
+    setFreshTag(e => !e)
     handleAddLinkDialogClose()
     // setEditState(false)
     objectAttributes.refresh()
@@ -326,7 +330,8 @@ interface CollectionListProps {
   handleAddLinkDialogClose(): void
 }
 
-const CollectionList: React.FC<CollectionListProps> = ({ type = 'dialog', currentType, newLinkType,
+const CollectionList: React.FC<CollectionListProps> = ({ type = 'dialog', currentType,
+  newLinkType, setFreshTag,
   newLinkName, handleAddLinkDialogClose, isChange = false }) => {
   const [addLinkSuccessState, setAddLinkSuccessState] = useState<boolean>(false)
   // const [editState, setEditState] = useState(false)
@@ -381,6 +386,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ type = 'dialog', curren
               newLinkName={newLinkName}
               newLinkType={newLinkType}
               isChange={isChange}
+              setFreshTag={setFreshTag}
               handleAddLinkDialogClose={handleAddLinkDialogClose}
             // setEditState={setEditState}
             />
@@ -393,6 +399,7 @@ const CollectionList: React.FC<CollectionListProps> = ({ type = 'dialog', curren
               newLinkName={newLinkName}
               newLinkType={newLinkType}
               name={name}
+              setFreshTag={setFreshTag}
               // setEditState={setEditState}
               handleAddLinkDialogClose={handleAddLinkDialogClose}
             />

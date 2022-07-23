@@ -123,3 +123,7 @@ export const deleteObject = (id: string) => {
 export const getSubName = (id: string) => {
   return api.get(`/object/subobjects/${id}`)
 }
+
+export const getPreName = (id: string) => {
+  return api.get(`object/collectionName/${id}`)
+}

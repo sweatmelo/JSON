@@ -66,7 +66,7 @@ const ObjectProvider: React.FC<ObjectProviderProps> = ({ children }) => {
   const objectAttributes = useObjectAttributes(objectState.id)
 
   useEffect(() => {
-    handleObjectVChange(objectInitValue)
+    // handleObjectVChange(objectInitValue)
   }, [collectionName])
 
   useEffect(() => {
@@ -94,10 +94,10 @@ const ObjectProvider: React.FC<ObjectProviderProps> = ({ children }) => {
 
   const handleAdd = async (newObject: IObejctAttributes) => {
     try {
-      console.log({
-        collectionName,
-        newObject,
-      })
+      // console.log({
+      //   collectionName,
+      //   newObject,
+      // })
       await addObject(collectionName, newObject)
     } catch (e) {
       console.warn(e)
@@ -105,8 +105,7 @@ const ObjectProvider: React.FC<ObjectProviderProps> = ({ children }) => {
   }
 
   const handleUpdate = async (data = null, id) => {
-    debugger
-    console.log('update', objectAttributesCacheRef.current)
+    // console.log('update', objectAttributesCacheRef.current)
     let res: any
     const _id = id
     // debugger

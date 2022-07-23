@@ -11,7 +11,7 @@ import { ArrowRightOutlined, Add } from '@mui/icons-material'
 
 import Drawer from '@/components/drawer'
 import theme from '@/libs/theme'
-import { getCollectionTree, IDocument, getSubObject, getLinkList, getSubName } from '@/libs/service'
+import { getCollectionTree, IDocument, getSubObject, getLinkList, getSubName, getPreName } from '@/libs/service'
 import { useCollectionContext } from '@/providers/collection'
 import { useObjectContext, ObjectModes, TObject } from '@/providers/object'
 import useAllCollections from '@/hooks/useAllCollections'
@@ -63,6 +63,8 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name }) => {
     useCollectionContext('CollectionItem')
   const isActive = collectionName === name
   const { handleAddDialogChange } = useObjectContext('CollectionItem')
+  // const { objectV, handleObjectVChange } = useObjectContext('CollectionItem')
+
 
   useEffect(() => {
     if (openState) {
@@ -153,11 +155,15 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   const { forceRefreshFlag, handleCollectionNameChange } = useCollectionContext('CollectionItemBeta')
   const { objectV, handleObjectVChange } = useObjectContext('CollectionItemBeta')
   const id = useId()
-
+  useEffect(() => {
+    // reSet()
+  }, [objectV.id])
   useEffect(() => {
     if (dataState.length > 0) {
       setOpenState(true)
     }
+
+    // console.log(res)
   }, [dataState])
 
   useEffect(() => {
@@ -176,7 +182,15 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
       attribute_name
     })
   }
+  const reSet = () => {
+    // setTimeout(() => {
+    getPreName(objectId).then(res => {
+      console.log(res);
+      handleCollectionNameChange(res);
+    })
+    // }, 1000)
 
+  }
   const handleFetchSubObject = async () => {
     try {
       const { documents } = await getSubObject(objectId)
@@ -190,7 +204,12 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
 
   return (
     <Box>
-      <HoverListItem active={objectV.key === id} sx={{ pl: (level + 1) * 2 }} onClick={handleClick}>
+      <HoverListItem active={objectV.key === id} sx={{ pl: (level + 1) * 2 }} onClick={() => {
+        handleClick()
+        reSet()
+      }
+
+      }>
         <ArrowRightOutlined
           sx={{
             marginRight: 2,
@@ -214,7 +233,7 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
   )
 }
 
-const CollectionList: React.FC = (freshTag) => {
+const CollectionList: React.FC = ({ freshTag }) => {
   const { data: collectionList, loading: collectionLoading } = useAllCollections(freshTag)
   //第一层的collection
   return (
