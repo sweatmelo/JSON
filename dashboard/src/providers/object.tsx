@@ -117,8 +117,10 @@ const ObjectProvider: React.FC<ObjectProviderProps> = ({ children }) => {
         res = await updateObjectAttributes(objectState.id, objectAttributesCacheRef.current)
       else
         await updateObjectAttributes(id, data)
-      handleForceRefresh()
-      res = await objectAttributes.refresh()
+      setTimeout(async () => {
+        handleForceRefresh()
+        res = await objectAttributes.refresh()
+      }, 800)
     } catch (e) {
       console.warn(e)
     }

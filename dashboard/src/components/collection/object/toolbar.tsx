@@ -400,6 +400,7 @@ placeholder="Please select"
               currentType={currentType}
               newLinkName={newLinkName}
               newLinkType={newLinkType}
+              setFreshTag={setFreshTag}
               handleAddLinkDialogClose={handleAddLinkDialogClose} />
           </DialogContent>
 

@@ -233,6 +233,10 @@ const CollectionItemBeta: React.FC<CollectionItemBetaProps> = ({
       }
     }
     handleAddLinkDialogClose()
+    setTimeout(() => {
+      setFreshTag(e => !e)
+    })
+    // setFreshTag(e => e)
   }
   const handleChange = async (e) => {
     e.stopPropagation()

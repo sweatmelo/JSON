@@ -13,7 +13,8 @@ import Drawer from '@/components/drawer'
 import theme from '@/libs/theme'
 import { getCollectionTree, IDocument, getSubObject, getLinkList, getSubName, getPreName } from '@/libs/service'
 import { useCollectionContext } from '@/providers/collection'
-import { useObjectContext, ObjectModes, TObject } from '@/providers/object'
+import { useObjectContext, ObjectModes, TObject, objectInitValue } from '@/providers/object'
+// import { useObjectContext, objectInitValue } from '@/providers/object'
 import useAllCollections from '@/hooks/useAllCollections'
 import { DATABASE_LIST_PANEL_WIDTH } from '@/constants/config'
 import Spin from '../spin'
@@ -63,7 +64,7 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name }) => {
     useCollectionContext('CollectionItem')
   const isActive = collectionName === name
   const { handleAddDialogChange } = useObjectContext('CollectionItem')
-  // const { objectV, handleObjectVChange } = useObjectContext('CollectionItem')
+  const { objectV, handleObjectVChange } = useObjectContext('CollectionItem')
 
 
   useEffect(() => {
@@ -78,6 +79,7 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ name }) => {
     }
     setOpenState(!openState)
     handleCollectionNameChange(name)
+    handleObjectVChange(objectInitValue)
   }
 
   const handleAddClick: MouseEventHandler = (e) => {
