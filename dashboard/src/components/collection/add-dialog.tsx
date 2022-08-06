@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
@@ -12,6 +12,8 @@ import { useCollectionContext } from '@/providers/collection'
 import { useObjectContext } from '@/providers/object'
 import { collectionSchemaToJson } from '@/utils'
 import JSONView from '../json-view'
+import { getAddSchema } from '@/libs/service'
+
 
 interface AddDialogProps { }
 
@@ -20,7 +22,13 @@ const AddDialog: React.FC<AddDialogProps> = () => {
   const { addDialog, handleAddDialogChange, submit } = useObjectContext('AddDialog')
   const dataCacheRef = useRef<Record<string, any>>({})
   const [submitLoadingState, setSubmitLoadingState] = useState<boolean>(false)
-
+  const [schemaModel, setSchemaModel] = useState('')
+  useEffect(() => {
+    getAddSchema(collectionName).then(res => {
+      setSchemaModel(res)
+    })
+    // setSchemaModel(res)
+  }, [collectionName])
   const handleSubmit = async () => {
     if (!collectionName || Object.keys(dataCacheRef.current).length === 0) {
       return
@@ -43,7 +51,7 @@ const AddDialog: React.FC<AddDialogProps> = () => {
       <DialogContent>
         <Box width={600} p={4}>
           <JSONView
-            src={collectionSchemaToJson(schema)}
+            src={collectionSchemaToJson(schemaModel)}
             onAdd={(e) => {
               dataCacheRef.current = e.updated_src
             }}

@@ -127,3 +127,6 @@ export const getSubName = (id: string) => {
 export const getPreName = (id: string) => {
   return api.get(`object/collectionName/${id}`)
 }
+export const getAddSchema = (name: string) => {
+  return api.get(`collections/requiredSchema/${name}`)
+}

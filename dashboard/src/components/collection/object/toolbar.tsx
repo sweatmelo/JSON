@@ -198,24 +198,38 @@ const ObjectTool = ({ setFreshTag }) => {
   }
 
   const handleDeleteDialogOk = async (id?: string) => {
+    debugger
     if (id && typeof id === 'string') {
       deleteLinkIdRef.current = id
     }
-    if (!confirmDeleteLinkDialogState) {
-      setConfirmDeleteLinkDialogState(true)
-      return;
-    }
+    // if (!confirmDeleteLinkDialogState) {
+    //   setConfirmDeleteLinkDialogState(true)
+    //   return;
+    // }
 
-    let { links } = objectAttributesCache.current
-    if (links) {
-      links = links.filter((item: any) => item['$oid'] !== deleteLinkIdRef.current)
-      objectAttributesCache.current = {
-        ...objectAttributesCache.current,
-        links,
+    let obj = objectAttributesCache.current
+    for (let i in obj) {
+      if (typeof obj[i] === 'object' && (obj[i].hasOwnProperty('object_reference'))) {
+        if (obj[i].object_reference.$oid == deleteLinkIdRef.current) {
+          delete obj[i]
+        }
+      } else if (typeof obj[i] === 'object' && (obj[i].hasOwnProperty('object_references'))) {
+        obj[i].object_references = obj[i].object_references.filter(e =>
+          e.$oid !== deleteLinkIdRef.current)
       }
-      await update()
-      setFreshTag(e => !e)
     }
+    // if (links) {
+    // links = links.filter((item: any) => item['$oid'] !== deleteLinkIdRef.current)
+    // objectAttributesCache.current = {
+    // ...objectAttributesCache.current,
+    // links,
+    // }
+    objectAttributesCache.current = obj
+    const res = await update()
+    res?.message?.includes('sucessfull') && setUpdateSuccess(true)
+    !res && setUpdateError(true)
+    setFreshTag(e => !e)
+    // }
     handleConfirmDeleteDialogClose()
     handleDeleteDialogClose()
     objectAttributes.refresh()
